@@ -14,9 +14,10 @@ var promoRouter=require('./routes/promoRouter')
 const mongoose=require('mongoose')
 const dishes=require('./models/dishes')
 const url='mongodb://localhost:27017/DishDatabase'
-var connect=mongoose.connect(url)
+var connect=mongoose.connect(url,{useNewUrlParser:true})
 connect.then((db) =>
 {
+  
   console.log("Connection established")
 
 },(err) => console.log(err))
