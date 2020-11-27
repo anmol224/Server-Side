@@ -273,6 +273,6 @@ dishRouter.route('/:dishId/comments/:commentId')
             return next(err)
         }
    },(err) => next(err))
-   .catch((err) => next())
+   .catch((err) => next(err))
 })
 module.exports=dishRouter;
