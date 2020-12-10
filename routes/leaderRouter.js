@@ -2,7 +2,7 @@ const express=require('express')
 const bodyParser=require('body-parser')
 const leaderRouter=express.Router();
 const leaders=require('../models/leaders');
-const leader = require('../models/leaders');
+
 leaderRouter.route('/')
 
 .get((req,res,next) =>

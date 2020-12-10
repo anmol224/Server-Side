@@ -7,7 +7,8 @@ var session=require('express-session')
 var filestore=require('session-file-store')(session)
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-
+var passport=require('passport')
+var authenticate=require('./authenticate')
 var app = express();
 var dishRouter=require('./routes/dishRouter')
 var leaderRouter=require('./routes/leaderRouter')
@@ -15,7 +16,7 @@ var promoRouter=require('./routes/promoRouter')
 const mongoose=require('mongoose')
 const dishes=require('./models/dishes')
 const url='mongodb://localhost:27017/DishDatabase'
-var connect=mongoose.connect(url,{useNewUrlParser:true})
+var connect=mongoose.connect(url,{useNewUrlParser:true,useUnifiedTopology:true})
 connect.then((db) =>
 {
   
@@ -38,35 +39,26 @@ app.use(session({
   store:new filestore()
 
 }))
+app.use(passport.initialize())
+app.use(passport.session())
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 function auth(req,res,next)
 {
-  console.log(req.session)
-  if(!req.session.user)
+ 
+  if(!req.user)
   {
    
  
     var err=new Error('You are not authenticated');
-    res.setHeader('WWW-Authenticate','Basic')
-    err.status=401;
+    
+    err.status=403;
     return next(err)
   }
-  
-  
-  
-  else
+ else
   {
-    if(req.session.user==='Authenticated')
-    {
-      next();
-    }
-    else
-    {
-      var err=new Error('You are not authenticated')
-      err.status=401;
-      return next(err)
-    }
+    
+    next()
   }
   
 }
