@@ -10,6 +10,7 @@ dishRouter.route('/')
 .get((req,res,next) =>
 {
     dishes.find({})
+    .populate('comments.author')
     .then((dishes) =>
     {
         res.statusCode=200;
@@ -51,6 +52,7 @@ dishRouter.route('/:dishId')
 .get((req,res,next) =>
 {
     dishes.findById(req.params.dishId)
+    .populate('comments.author')
     .then((dish) =>
     {
         res.statusCode=200;
@@ -95,6 +97,7 @@ dishRouter.route('/:dishId/comments')
 .get((req,res,next) =>
 {
     dishes.findById(req.params.dishId)
+    .populate('comments.author')
     .then((dish) =>
     {
         if(dish!=null)
@@ -120,18 +123,25 @@ dishRouter.route('/:dishId/comments')
 })
 .post(authenticate.verifyUser,(req,res,next) =>
 {
+
     dishes.findById(req.params.dishId)
     .then((dish) =>
     {
        if(dish!=null)
        {
+           req.body.author=req.user._id;
            dish.comments.push(req.body)
            dish.save()
            .then((dish) =>
            {
-               res.statusCode=200;
-               res.setHeader("Content-Type","application/json")
-               res.json(dish)
+               dishes.findById(dish._id)
+               .populate('comments.author')
+               .then((dish)=>
+               {
+                res.statusCode=200;
+                res.setHeader("Content-Type","application/json")
+                res.json(dish)
+               })
            },err => next(err))
        }
        else
@@ -178,6 +188,7 @@ dishRouter.route('/:dishId/comments/:commentId')
 .get((req,res,next) =>
 {
     dishes.findById(req.params.dishId)
+    .populate('comments.author')
     .then((dish) =>
     {
         if(dish!=null && dish.comments.id(req.params.commentId)!=null)
@@ -225,9 +236,15 @@ dishRouter.route('/:dishId/comments/:commentId')
             dish.save()
             .then((dish) =>
             {
+                dishes.findById(dish._id)
+                .populate('comments.author')
+                .then((dish)=>
+                {
                 res.statusCode=200;
                 res.setHeader('Content-Type','application/json')
                 res.json(dish)
+                })
+                
             },(err) => next(err))
         }
         else if(dish==null)
