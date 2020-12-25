@@ -8,8 +8,10 @@ const { ExpectationFailed } = require('http-errors');
 const user = require('../models/user');
 router.use(bodyparser.json())
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.end('respond with a resource');
+router.get('/',authenticate.verifyUser, (req,res,next)=>{
+
+  authenticate.verifyAdmin(req,res,next)
+ 
 });
 router.post('/signup',(req,res,next) =>
 {
@@ -34,6 +36,7 @@ users.register(new users({username:req.body.username}),req.body.password,
         res.statusCode=500;
         res.setHeader('Content-Type','application/json')
         res.json({err:err})
+        
       }
       passport.authenticate('local')(req,res,() =>
     {

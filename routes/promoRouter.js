@@ -20,11 +20,21 @@ promoRouter.route('/')
 })
 .put(authenticate.verifyUser,(req,res,next) =>
 {
-    res.statusCode=403;
-    res.end("Put operation not Supported")
+    if(req.user.admin==true)
+     {
+        res.statusCode=403;
+        res.end("Put operation not Supported")
+     }
+    else
+    {
+        var err=new Error("You are not authorized to perform this operation!")
+        err.status=403;
+        return next(err)
+    }
 })
 .post(authenticate.verifyUser,(req,res,next) =>
 {
+   if(req.user.admin==true){
     promotions.create(req.body)
     .then((promo) =>
     {
@@ -34,9 +44,17 @@ promoRouter.route('/')
         res.json(promo)
     },(err) => next(err))
     .catch((err) => next(err))
+   }
+   else
+   {
+ err=new Error("You are not authorized to perform this operation!")
+    err.status=403;
+    return next(err)
+   }
 })
 .delete(authenticate.verifyUser,(req,res,next) =>
 {
+   if(req.user.admin==true){
     promotions.remove({})
     .then((resp) =>
     {
@@ -45,6 +63,13 @@ promoRouter.route('/')
         res.json(resp)
     },(err) => next(err))
     .catch((err) => next(err))
+   }
+   else
+   {
+    var err=new Error("You are not authorized to perform this operation!")
+    err.status=403;
+    return next(err)
+   }
 });
 
 promoRouter.route('/:promoId')
@@ -61,6 +86,7 @@ promoRouter.route('/:promoId')
 })
 .put(authenticate.verifyUser,(req,res,next) =>
 {
+   if(req.user.admin==true){
     promotions.findByIdAndUpdate(req.params.promoId,{
         $set:req.body
     },{
@@ -73,14 +99,31 @@ promoRouter.route('/:promoId')
         res.json(promo)
     },(err) => next(err))
     .catch((err) => next(err))
+   }
+   else
+   {
+    var err=new Error("You are not authorized to perform this operation!")
+    err.status=403;
+    return next(err)
+   }
 })
 .post(authenticate.verifyUser,(req,res,next) => 
 {
-    res.statusCode=403;
+    if(req.user.admin==true)
+    {
+        res.statusCode=403;
     res.end("Post operation not Supported")
+    }
+    else
+    {
+        var err=new Error("You are not authorized to perform this operation!")
+        err.status=403;
+        return next(err)
+    }
 })
 .delete(authenticate.verifyUser,(req,res,next) =>
 {
+   if(req.user.admin==true){
     promotions.findByIdAndRemove(req.params.promoId)
     .then((resp) =>
     {
@@ -89,5 +132,12 @@ promoRouter.route('/:promoId')
         res.json(resp)
     },(err) => next(err))
     .catch((err) => next(err))
+   }
+   else
+   {
+    var err=new Error("You are not authorized to perform this operation!")
+    err.status=403;
+    return next(err)
+   }
 })
 module.exports=promoRouter;

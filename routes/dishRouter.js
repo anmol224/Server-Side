@@ -10,7 +10,7 @@ dishRouter.route('/')
 .get((req,res,next) =>
 {
     dishes.find({})
-    .populate('comments.author')
+   // .populate('comments.author')
     .then((dishes) =>
     {
         res.statusCode=200;
@@ -21,12 +21,23 @@ dishRouter.route('/')
 })
 .put(authenticate.verifyUser,(req,res,next) =>
 {
+   if(req.user.admin==true)
+   {
     res.statusCode=403;
     res.end("Sorry put operation not supported")
+   }
+   else
+   {
+       err=new Error("You are not authorized to perform this operation!")
+        err.status=404;
+        return next(err)
+    }
 })
 .post(authenticate.verifyUser,(req,res,next) =>
 {
-    dishes.create(req.body)
+    if(req.user.admin==true)
+    {
+        dishes.create(req.body)
     .then((dish) =>
     {
         console.log("Dish Created ",dish)
@@ -35,10 +46,19 @@ dishRouter.route('/')
         res.json(dish)
     },(err) => next(err))
     .catch((err) => next(err))
+    }
+    else
+    {
+        var err=new Error("You are not authorized to perform this operation!")
+        err.status=403;
+        return next(err);
+    }
 })
 .delete(authenticate.verifyUser,(req,res,next) =>
 {
-    dishes.remove({})
+    if(req.user.admin==true)
+    {
+        dishes.remove({})
     .then((resp) =>
     {
         res.statusCode=200;
@@ -46,13 +66,20 @@ dishRouter.route('/')
         res.json(resp);
     },(err) => next(err))
     .catch((err) => next(err))
+    }
+    else
+    {
+        var err=new Error("You are not authorized to perform this operation!")
+        err.status=403;
+        return next(err);
+    }
 });
 
 dishRouter.route('/:dishId')
 .get((req,res,next) =>
 {
     dishes.findById(req.params.dishId)
-    .populate('comments.author')
+    //.populate('comments.author')
     .then((dish) =>
     {
         res.statusCode=200;
@@ -63,27 +90,50 @@ dishRouter.route('/:dishId')
 })
 .post(authenticate.verifyUser,(req,res,next) =>
 {
-    res.statusCode=403;
-    res.end('Post operation not supported on /dishes/:'+ req.params.dishId)
+    if(req.user.admin==true)
+    {
+        res.statusCode=403;
+        res.end('Post operation not supported on /dishes/:'+ req.params.dishId)
+    }
+    else
+    {
+        var err=new Error("You are not authorized to perform this operation!")
+        err.status=403;
+        return next(err);
+    }
+    
+    
+   
 })
 .put(authenticate.verifyUser,(req,res,next) =>
 {
-    dishes.findByIdAndUpdate(req.params.dishId,{
-        $set:req.body
-    },{
-        new:true
-    })
-    .then((dish) =>
+    if(req.user.admin==true)
     {
-        res.statusCode=200;
-        res.setHeader('Content-Type','application/json')
-        res.json(dish)
-    },(err) => next(err))
-    .catch((err) => next(err))
+        dishes.findByIdAndUpdate(req.params.dishId,{
+            $set:req.body
+        },{
+            new:true
+        })
+        .then((dish) =>
+        {
+            res.statusCode=200;
+            res.setHeader('Content-Type','application/json')
+            res.json(dish)
+        },(err) => next(err))
+        .catch((err) => next(err))
+    }
+    else
+    {
+        var err=new Error("You are not authorized to perform this operation!")
+        err.status=403;
+        return next(err);
+    }
 })
 .delete(authenticate.verifyUser,(req,res,next) => 
 {
-    dishes.findByIdAndRemove(req.params.dishId)
+    if(req.user.admin==true)
+    {
+        dishes.findByIdAndRemove(req.params.dishId)
     .then((resp) =>
     {
         res.statusCode=200;
@@ -91,6 +141,13 @@ dishRouter.route('/:dishId')
         res.json(resp)
     },(err) => next(err))
     .catch((err) => next(err))
+    }
+    else
+    {
+        var err=new Error("You are not authorized to perform this operation!")
+        err.status=403;
+        return next(err);
+    }
 })
 dishRouter.route('/:dishId/comments')
 
@@ -155,6 +212,8 @@ dishRouter.route('/:dishId/comments')
 })
 .delete(authenticate.verifyUser,(req,res,next) =>
 {
+   if(req.user.admin==true)
+   {
     dishes.findById(req.params.dishId)
     .then((dish) =>
     {
@@ -182,6 +241,13 @@ dishRouter.route('/:dishId/comments')
        
     },(err) => next(err))
     .catch((err) => next(err))
+   }
+   else
+   {
+    var err=new Error('You are not authorized to perform this operation!')
+    err.status=404;
+    return next(err) 
+   }
 });
 
 dishRouter.route('/:dishId/comments/:commentId')
@@ -223,6 +289,9 @@ dishRouter.route('/:dishId/comments/:commentId')
     dishes.findById(req.params.dishId)
     .then((dish) =>
     {
+        var authorId=dish.comments.id(req.params.commentId).author;
+        if((req.user._id).equals(authorId))
+        {
         if(dish!=null && dish.comments.id(req.params.commentId)!=null)
         {
             if(req.body.rating)
@@ -259,6 +328,13 @@ dishRouter.route('/:dishId/comments/:commentId')
             err.status=404;
             return next(err)
         }
+    }
+    else
+    {
+        var err=new Error("You are not authorized to perform this operation!")
+        err.status=403;
+        return next(err)
+    }
     },(err) => next(err))
     .catch((err) => next(err))
 })
@@ -267,6 +343,9 @@ dishRouter.route('/:dishId/comments/:commentId')
    dishes.findById(req.params.dishId)
    .then((dish) => 
    {
+    var authorId=dish.comments.id(req.params.commentId).author;
+    if((req.user._id).equals(authorId))
+    {
        if(dish!=null && dish.comments.id(req.params.commentId)!=null)
        {
             dish.comments.id(req.params.commentId).remove()
@@ -290,6 +369,13 @@ dishRouter.route('/:dishId/comments/:commentId')
             err.status=404;
             return next(err)
         }
+    }
+    else
+    {
+        var err=new Error("You are not authorized to perform this operation!")
+        err.status=403;
+        return next(err)
+    }
    },(err) => next(err))
    .catch((err) => next(err))
 })
