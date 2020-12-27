@@ -10,6 +10,17 @@ var usersRouter = require('./routes/users');
 var passport=require('passport')
 var authenticate=require('./authenticate')
 var app = express();
+app.all('*',(req,res,next) =>
+{
+  if(req.secure==true)
+  {
+    return next();
+  }
+  else
+  {
+    res.redirect(307,'https://'+ req.hostname + ':' + app.get('secPort') + req.url)
+  }
+})
 var dishRouter=require('./routes/dishRouter')
 var leaderRouter=require('./routes/leaderRouter')
 var promoRouter=require('./routes/promoRouter')
