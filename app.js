@@ -10,7 +10,7 @@ var usersRouter = require('./routes/users');
 var passport=require('passport')
 var authenticate=require('./authenticate')
 var app = express();
-app.all('*',(req,res,next) =>
+/*app.all('*',(req,res,next) =>
 {
   if(req.secure==true)
   {
@@ -20,10 +20,11 @@ app.all('*',(req,res,next) =>
   {
     res.redirect(307,'https://'+ req.hostname + ':' + app.get('secPort') + req.url)
   }
-})
+})*/
 var dishRouter=require('./routes/dishRouter')
 var leaderRouter=require('./routes/leaderRouter')
 var promoRouter=require('./routes/promoRouter')
+var uploadRouter=require('./routes/uploadRouter')
 const mongoose=require('mongoose')
 const dishes=require('./models/dishes')
 const url='mongodb://localhost:27017/DishDatabase'
@@ -62,6 +63,7 @@ app.use('/dishes',dishRouter)
 
 app.use('/leaders',leaderRouter)
 app.use('/promotions',promoRouter)
+app.use('/imageUpload',uploadRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
